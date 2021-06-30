@@ -20,6 +20,10 @@ namespace Google\Auth\Tests;
 use Google\Auth\OAuth2;
 use GuzzleHttp\Psr7;
 use PHPUnit\Framework\TestCase;
+use InvalidArgumentException;
+use UnexpectedValueException;
+use DomainException;
+use Exception;
 
 class OAuth2AuthorizationUriTest extends TestCase
 {
@@ -29,20 +33,18 @@ class OAuth2AuthorizationUriTest extends TestCase
         'clientId' => 'aClientID',
     ];
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testIsNullIfAuthorizationUriIsNull()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $o = new OAuth2([]);
         $this->assertNull($o->buildFullAuthorizationUri());
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testRequiresTheClientId()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $o = new OAuth2([
             'authorizationUri' => 'https://accounts.test.org/auth/url',
             'redirectUri' => 'https://accounts.test.org/redirect/url',
@@ -50,11 +52,10 @@ class OAuth2AuthorizationUriTest extends TestCase
         $o->buildFullAuthorizationUri();
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testRequiresTheRedirectUri()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $o = new OAuth2([
             'authorizationUri' => 'https://accounts.test.org/auth/url',
             'clientId' => 'aClientID',
@@ -62,11 +63,10 @@ class OAuth2AuthorizationUriTest extends TestCase
         $o->buildFullAuthorizationUri();
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testCannotHavePromptAndApprovalPrompt()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $o = new OAuth2([
             'authorizationUri' => 'https://accounts.test.org/auth/url',
             'clientId' => 'aClientID',
@@ -77,11 +77,10 @@ class OAuth2AuthorizationUriTest extends TestCase
         ]);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testCannotHaveInsecureAuthorizationUri()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $o = new OAuth2([
             'authorizationUri' => 'http://accounts.test.org/insecure/url',
             'redirectUri' => 'https://accounts.test.org/redirect/url',
@@ -90,11 +89,10 @@ class OAuth2AuthorizationUriTest extends TestCase
         $o->buildFullAuthorizationUri();
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testCannotHaveRelativeRedirectUri()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $o = new OAuth2([
             'authorizationUri' => 'http://accounts.test.org/insecure/url',
             'redirectUri' => '/redirect/url',
@@ -350,11 +348,10 @@ class OAuth2GeneralTest extends TestCase
         'clientId' => 'aClientID',
     ];
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testFailsOnUnknownSigningAlgorithm()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $o = new OAuth2($this->minimal);
         $o->setSigningAlgorithm('this is definitely not an algorithm name');
     }
@@ -368,11 +365,10 @@ class OAuth2GeneralTest extends TestCase
         }
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testFailsOnRelativeRedirectUri()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $o = new OAuth2($this->minimal);
         $o->setRedirectUri('/relative/url');
     }
@@ -397,11 +393,9 @@ class OAuth2JwtTest extends TestCase
         'clientId' => 'aClientID',
     ];
 
-    /**
-     * @expectedException DomainException
-     */
     public function testFailsWithMissingAudience()
     {
+        $this->expectException(DomainException::class);
         $testConfig = $this->signingMinimal;
         unset($testConfig['audience']);
         unset($testConfig['scope']);
@@ -409,43 +403,37 @@ class OAuth2JwtTest extends TestCase
         $o->toJwt();
     }
 
-    /**
-     * @expectedException DomainException
-     */
     public function testFailsWithMissingIssuer()
     {
+        $this->expectException(DomainException::class);
         $testConfig = $this->signingMinimal;
         unset($testConfig['issuer']);
         $o = new OAuth2($testConfig);
         $o->toJwt();
     }
 
-    /**
-     */
     public function testCanHaveNoScope()
     {
         $testConfig = $this->signingMinimal;
         unset($testConfig['scope']);
         $o = new OAuth2($testConfig);
-        $o->toJwt();
+        $jwt = $o->toJwt();
+        $this->assertTrue(is_string($jwt));
     }
 
-    /**
-     * @expectedException DomainException
-     */
     public function testFailsWithMissingSigningKey()
     {
+        $this->expectException(DomainException::class);
+
         $testConfig = $this->signingMinimal;
         unset($testConfig['signingKey']);
         $o = new OAuth2($testConfig);
         $o->toJwt();
     }
 
-    /**
-     * @expectedException DomainException
-     */
     public function testFailsWithMissingSigningAlgorithm()
     {
+        $this->expectException(DomainException::class);
         $testConfig = $this->signingMinimal;
         unset($testConfig['signingAlgorithm']);
         $o = new OAuth2($testConfig);
@@ -556,22 +544,18 @@ class OAuth2GenerateAccessTokenRequestTest extends TestCase
         'clientId' => 'aClientID',
     ];
 
-    /**
-     * @expectedException DomainException
-     */
     public function testFailsIfNoTokenCredentialUri()
     {
+        $this->expectException(DomainException::class);
         $testConfig = $this->tokenRequestMinimal;
         unset($testConfig['tokenCredentialUri']);
         $o = new OAuth2($testConfig);
         $o->generateCredentialsRequest();
     }
 
-    /**
-     * @expectedException DomainException
-     */
     public function testFailsIfAuthorizationCodeIsMissing()
     {
+        $this->expectException(DomainException::class);
         $testConfig = $this->tokenRequestMinimal;
         $testConfig['redirectUri'] = 'https://has/redirect/uri';
         $o = new OAuth2($testConfig);
@@ -706,11 +690,10 @@ class OAuth2FetchAuthTokenTest extends TestCase
         'clientId' => 'aClientID',
     ];
 
-    /**
-     * @expectedException GuzzleHttp\Exception\ClientException
-     */
     public function testFailsOn400()
     {
+        $this->expectException(\GuzzleHttp\Exception\ClientException::class);
+
         $testConfig = $this->fetchAuthTokenMinimal;
         $httpHandler = getHandler([
             buildResponse(400),
@@ -719,11 +702,10 @@ class OAuth2FetchAuthTokenTest extends TestCase
         $o->fetchAuthToken($httpHandler);
     }
 
-    /**
-     * @expectedException GuzzleHttp\Exception\ServerException
-     */
     public function testFailsOn500()
     {
+        $this->expectException(\GuzzleHttp\Exception\ServerException::class);
+
         $testConfig = $this->fetchAuthTokenMinimal;
         $httpHandler = getHandler([
             buildResponse(500),
@@ -732,12 +714,11 @@ class OAuth2FetchAuthTokenTest extends TestCase
         $o->fetchAuthToken($httpHandler);
     }
 
-    /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Invalid JSON response
-     */
     public function testFailsOnNoContentTypeIfResponseIsNotJSON()
     {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid JSON response');
+
         $testConfig = $this->fetchAuthTokenMinimal;
         $notJson = '{"foo": , this is cannot be passed as json" "bar"}';
         $httpHandler = getHandler([
@@ -922,7 +903,7 @@ class OAuth2VerifyIdTokenTest extends TestCase
         'clientId' => 'myaccount.on.host.issuer.com',
     ];
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->publicKey =
             file_get_contents(__DIR__ . '/fixtures' . '/public.pem');
@@ -930,11 +911,10 @@ class OAuth2VerifyIdTokenTest extends TestCase
             file_get_contents(__DIR__ . '/fixtures' . '/private.pem');
     }
 
-    /**
-     * @expectedException UnexpectedValueException
-     */
     public function testFailsIfIdTokenIsInvalid()
     {
+        $this->expectException(UnexpectedValueException::class);
+
         $testConfig = $this->verifyIdTokenMinimal;
         $not_a_jwt = 'not a jot';
         $o = new OAuth2($testConfig);
@@ -942,11 +922,9 @@ class OAuth2VerifyIdTokenTest extends TestCase
         $o->verifyIdToken($this->publicKey);
     }
 
-    /**
-     * @expectedException DomainException
-     */
     public function testFailsIfAudienceIsMissing()
     {
+        $this->expectException(DomainException::class);
         $testConfig = $this->verifyIdTokenMinimal;
         $now = time();
         $origIdToken = [
@@ -960,11 +938,9 @@ class OAuth2VerifyIdTokenTest extends TestCase
         $o->verifyIdToken($this->publicKey, ['RS256']);
     }
 
-    /**
-     * @expectedException DomainException
-     */
     public function testFailsIfAudienceIsWrong()
     {
+        $this->expectException(DomainException::class);
         $now = time();
         $testConfig = $this->verifyIdTokenMinimal;
         $origIdToken = [

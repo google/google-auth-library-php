@@ -22,6 +22,8 @@ use Google\Auth\HttpHandler\HttpClientCache;
 use Google\Auth\Tests\BaseTest;
 use GuzzleHttp\Psr7;
 use Prophecy\Argument;
+use InvalidArgumentException;
+use Exception;
 
 /**
  * @group credentials
@@ -111,12 +113,11 @@ class GCECredentialsTest extends BaseTest
         $this->assertEquals(array(), $g->fetchAuthToken($httpHandler));
     }
 
-    /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Invalid JSON response
-     */
     public function testFetchAuthTokenShouldFailIfResponseIsNotJson()
     {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Invalid JSON response');
+
         $notJson = '{"foo": , this is cannot be passed as json" "bar"}';
         $httpHandler = getHandler([
             buildResponse(200, [GCECredentials::FLAVOR_HEADER => 'Google']),
@@ -172,12 +173,11 @@ class GCECredentialsTest extends BaseTest
         $this->assertEquals(2, $timesCalled);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Scope and targetAudience cannot both be supplied
-     */
     public function testSettingBothScopeAndTargetAudienceThrowsException()
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Scope and targetAudience cannot both be supplied');
+
         $g = new GCECredentials(null, 'a-scope', 'a+target+audience');
     }
 
@@ -186,8 +186,6 @@ class GCECredentialsTest extends BaseTest
      */
     public function testFetchAuthTokenCustomScope($scope, $expected)
     {
-        $this->onlyGuzzle6And7();
-
         $uri = null;
         $client = $this->prophesize('GuzzleHttp\ClientInterface');
         $client->send(Argument::any(), Argument::any())
@@ -259,8 +257,6 @@ class GCECredentialsTest extends BaseTest
 
     public function testSignBlob()
     {
-        $this->onlyGuzzle6And7();
-
         $expectedEmail = 'test@test.com';
         $expectedAccessToken = 'token';
         $stringToSign = 'inputString';
@@ -292,8 +288,6 @@ class GCECredentialsTest extends BaseTest
 
     public function testSignBlobWithLastReceivedAccessToken()
     {
-        $this->onlyGuzzle6And7();
-
         $expectedEmail = 'test@test.com';
         $expectedAccessToken = 'token';
         $notExpectedAccessToken = 'othertoken';
@@ -335,8 +329,6 @@ class GCECredentialsTest extends BaseTest
 
     public function testGetProjectId()
     {
-        $this->onlyGuzzle6And7();
-
         $expected = 'foobar';
 
         $client = $this->prophesize('GuzzleHttp\ClientInterface');
@@ -358,8 +350,6 @@ class GCECredentialsTest extends BaseTest
 
     public function testGetProjectIdShouldBeEmptyIfNotOnGCE()
     {
-        $this->onlyGuzzle6And7();
-
         // simulate retry attempts by returning multiple 500s
         $client = $this->prophesize('GuzzleHttp\ClientInterface');
         $client->send(Argument::any(), Argument::any())
